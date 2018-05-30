@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import csv
 import gzip
 import datetime
 from decimal import Decimal
@@ -29,6 +30,8 @@ ticker_by_id = {}
 id_by_ticker = {}
 transactions = []
 quantities_by_ticker = {}
+
+values = []
 
 inout = {}
 
@@ -145,14 +148,52 @@ for ticker,amnt in quantities_by_ticker.items():
   totval = mostrecenteur[ticker]*amnt
   totals += totval
 
+inoutidx = dict(inout)
+
+# --------------
+
+data = []
+with open('vboxshared/index.csv') as csvfile:
+  reader = csv.reader(csvfile)
+  for row in list(reader)[1:]:
+    timestr = row[0].replace(' 0:00','')
+    date = datetime.datetime.strptime(timestr, "%d-%m-%y").date()
+    idxval = Decimal(row[2])
+    data += [(date, idxval)]
+
+def next_idxquote(date):
+  try:
+    return sorted([(abs((k-date).days),v) for k,v in data if k >= date], key=lambda x:x[0])[0][1]
+  except IndexError:
+    return sorted([(abs((k-date).days),v) for k,v in data], key=lambda x:x[0])[0][1]
+
+totalidx = Fraction(0)
+for k,v in sorted(inoutidx.items(), key=lambda x:x[0]):
+  quote = next_idxquote(k)
+  totalidx -= v/Fraction(quote)
+totalidx *= Fraction(next_idxquote(datetime.date.today()))
+
+date = datetime.date.today()
+if date not in inoutidx:
+  inoutidx[date] = Fraction(0)
+inoutidx[date] += totalidx
+
+# Index in and out
+for k,v in sorted(inoutidx.items(), key=lambda x:x[0]):
+  print str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator))
+
+print "=================="
+
+# ---------------
+
 date = datetime.date.today()
 if date not in inout:
   inout[date] = Fraction(0)
 inout[date] += totals
 
-def npv(irr):
+def npv(dataset,irr):
   total = 0.0
-  for k,v in sorted(inout.items(), key=lambda x:x[0]):
+  for k,v in sorted(dataset.items(), key=lambda x:x[0]):
     fv = float(v)
     days = (k-datetime.date.today()).days
     total += fv*(1.0+irr)**(-days/365.0)
@@ -162,20 +203,24 @@ def npv(irr):
 for k,v in sorted(inout.items(), key=lambda x:x[0]):
   print str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator))
 
-# Binary search
-toprange = 100.0
-bottomrange = -0.99
-if npv(toprange) > 0 or npv(bottomrange) < 0:
-  raise Exception("ERROR")
-for n in range(10000):
-  if abs(toprange - bottomrange) < 1e-14:
-    break
-  mid = (toprange+bottomrange)/2
-  if npv(mid) > 0:
-    bottomrange = mid
-  else:
-    toprange = mid
+def binsearch(dataset):
+  toprange = 100.0
+  bottomrange = -0.99
+  if npv(dataset, toprange) > 0 or npv(dataset, bottomrange) < 0:
+    raise Exception("ERROR")
+  for n in range(10000):
+    if abs(toprange - bottomrange) < 1e-14:
+      break
+    mid = (toprange+bottomrange)/2
+    if npv(dataset, mid) > 0:
+      bottomrange = mid
+    else:
+      toprange = mid
+  return mid
 
-print mid
+print "=================="
 
-print npv(0.0)
+print "My portfolio", binsearch(inout)
+print "My portfolio", npv(inout, 0.0)
+print "Index", binsearch(inoutidx)
+print "Index", npv(inoutidx, 0.0)
