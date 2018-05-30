@@ -167,7 +167,9 @@ toprange = 100.0
 bottomrange = -0.99
 if npv(toprange) > 0 or npv(bottomrange) < 0:
   raise Exception("ERROR")
-for n in range(1000):
+for n in range(10000):
+  if abs(toprange - bottomrange) < 1e-14:
+    break
   mid = (toprange+bottomrange)/2
   if npv(mid) > 0:
     bottomrange = mid
