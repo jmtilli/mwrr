@@ -84,7 +84,7 @@ for accxml in book.iter('{http://www.gnucash.org/XML/gnc}account'):
       continue
     currency = accxml.find('{http://www.gnucash.org/XML/act}commodity').find('{http://www.gnucash.org/XML/cmdty}id').text
     incomeaccounts[accid] = currency
-  if acctype != "STOCK":
+  if acctype != "STOCK" and acctype != "MUTUAL":
     continue
   ticker = accxml.find('{http://www.gnucash.org/XML/act}commodity').find('{http://www.gnucash.org/XML/cmdty}id').text
   ticker_by_id[accid] = ticker
