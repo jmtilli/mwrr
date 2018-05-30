@@ -155,7 +155,7 @@ def npv(irr):
   for k,v in sorted(inout.items(), key=lambda x:x[0]):
     fv = float(v)
     days = (k-datetime.date.today()).days
-    total += fv*(1.0+irr)**(-days/360.0)
+    total += fv*(1.0+irr)**(-days/365.0)
   return total
   
 # Money in and out
