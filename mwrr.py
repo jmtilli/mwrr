@@ -175,3 +175,5 @@ for n in range(1000):
     toprange = mid
 
 print mid
+
+print npv(0.0)
