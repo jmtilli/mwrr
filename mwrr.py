@@ -16,12 +16,13 @@ checkingaccounts = {
 }
 dividend_income_account = "722b4e3a7e646163c19dcdaa4276c877"
 
-currencylist = set(["USD","SEK","NOK","DKK","EUR"])
+currencylist = set(["USD","SEK","NOK","DKK","EUR","GBP"])
 currencies = {"EUR": (Fraction(1), datetime.date.today())}
 currenciesall = {"EUR": [(Fraction(1), datetime.date.today())],
                  "USD": [],
                  "NOK": [],
                  "SEK": [],
+                 "GBP": [],
                  "DKK": []}
 incomeaccounts = {}
 mostrecent = {}
