@@ -13,6 +13,7 @@ checkingaccounts = {
   "ed9db9c603d9634b943c0e1ef67cb69d": "EUR",
   "17842d5451a5ea9bc67866cef52570a6": "USD",
   "aff014c4e1db58420455d215a99b020f": "SEK",
+  "3ad0a9e79aa528a0f21e165400733970": "EUR", # Receivables Sponda
 }
 dividend_income_account = "722b4e3a7e646163c19dcdaa4276c877"
 
@@ -79,6 +80,9 @@ for k,v in mostrecenteur.items():
   #print k + " " + str(Decimal(v.numerator) / Decimal(v.denominator))
   pass
 
+moneyin_by_id = {}
+moneyout_by_id = {}
+
 for accxml in book.iter('{http://www.gnucash.org/XML/gnc}account'):
   accid = accxml.find('{http://www.gnucash.org/XML/act}id').text
   acctype = accxml.find('{http://www.gnucash.org/XML/act}type').text
@@ -137,6 +141,14 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   if date not in inout:
     inout[date] = Fraction(0)
   inout[date] += value
+  if value < 0:
+    if ticker not in moneyin_by_id:
+      moneyin_by_id[ticker] = Fraction(0)
+    moneyin_by_id[ticker] -= value
+  else:
+    if ticker not in moneyout_by_id:
+      moneyout_by_id[ticker] = Fraction(0)
+    moneyout_by_id[ticker] += value
   #print "TX: " + str(date) + " " + ticker + " val " + str(value) + " " + currency + " @ " + str(quantity)
 #print "-----"
 #for k,v in sorted(inout.items(), key=lambda x:x[0]):
@@ -201,8 +213,25 @@ def npv(dataset,irr):
   return total
   
 # Money in and out
+moneyin = 0
+moneyout = 0
 for k,v in sorted(inout.items(), key=lambda x:x[0]):
+  if v < 0:
+    moneyin -= v
+  else:
+    moneyout += v
   print str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator))
+
+#print "Money in " + str(Decimal(moneyin.numerator)/Decimal(moneyin.denominator))
+#print "Money out " + str(Decimal(moneyout.numerator)/Decimal(moneyout.denominator))
+
+#print "----"
+#for k,v in moneyin_by_id.items():
+#  print "Money in " + k + " " + str(Decimal(v.numerator)/Decimal(v.denominator))
+#print "----"
+#for k,v in moneyout_by_id.items():
+#  print "Money out " + k + " " + str(Decimal(v.numerator)/Decimal(v.denominator))
+#print "----"
 
 def binsearch(dataset):
   toprange = 100.0
