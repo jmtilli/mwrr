@@ -167,10 +167,11 @@ inoutidx = dict(inout)
 
 data = []
 with open('vboxshared/index.csv') as csvfile:
-  reader = csv.reader(csvfile)
+  reader = csv.reader(csvfile, delimiter=';')
   for row in list(reader)[1:]:
     timestr = row[0].replace(' 0:00','')
-    date = datetime.datetime.strptime(timestr, "%d-%m-%y").date()
+    date = datetime.datetime.strptime(timestr, "%d.%m.%Y").date()
+    row[2] = row[2].replace(',', '.')
     idxval = Decimal(row[2])
     data += [(date, idxval)]
 
