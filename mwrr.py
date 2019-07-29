@@ -17,6 +17,11 @@ checkingaccounts = {
 }
 dividend_income_account = "722b4e3a7e646163c19dcdaa4276c877"
 
+# Investments I would not do according to my current strategy
+with open("mwrr/mistakes.txt") as f:
+  mistakes = set(x.strip() for x in f.readlines())
+#mistakes = set([])
+
 currencylist = set(["USD","SEK","NOK","DKK","EUR","GBP"])
 currencies = {"EUR": (Fraction(1), datetime.date.today())}
 currenciesall = {"EUR": [(Fraction(1), datetime.date.today())],
@@ -36,6 +41,7 @@ quantities_by_ticker = {}
 values = []
 
 inout = {}
+inoutnonmistaken = {}
 
 def nearest_quote(currency, date):
   curdata = currenciesall[currency]
@@ -82,6 +88,8 @@ for k,v in mostrecenteur.items():
 
 moneyin_by_id = {}
 moneyout_by_id = {}
+moneyin_by_id_nonmistaken = {}
+moneyout_by_id_nonmistaken = {}
 
 for accxml in book.iter('{http://www.gnucash.org/XML/gnc}account'):
   accid = accxml.find('{http://www.gnucash.org/XML/act}id').text
@@ -100,6 +108,8 @@ for accxml in book.iter('{http://www.gnucash.org/XML/gnc}account'):
   #print ticker + ": " + accid
 for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   ticker = None
+  mistake = False
+  income_ticker = None
   splitsxml = trnxml.find('{http://www.gnucash.org/XML/trn}splits')
   datepostxml = trnxml.find('{http://www.gnucash.org/XML/trn}date-posted')
   timestr = datepostxml.find('{http://www.gnucash.org/XML/ts}date').text
@@ -117,7 +127,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
     quantitytext = splitxml.find('{http://www.gnucash.org/XML/split}quantity').text
     actiontext = actionxml is not None and actionxml.text or None
     if acctext in incomeaccounts:
-      #print "income"
+      #print "income " + str(date) + " " + str(quantitytext)
       income += Fraction(quantitytext)*nearest_quote(incomeaccounts[acctext],date)
     if acctext in checkingaccounts:
       currency = checkingaccounts[acctext]
@@ -131,24 +141,50 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       if ticker not in quantities_by_ticker:
         quantities_by_ticker[ticker] = Fraction(0)
       quantities_by_ticker[ticker] += Fraction(quantitytext)
+    elif acctext in ticker_by_id and actiontext not in set(["Buy","Sell"]):
+      if not found:
+        income_ticker = ticker_by_id[acctext]
   if income != Fraction(0):
+    assert income_ticker
+    if income_ticker in mistakes:
+      mistake = True
+      #continue
     if date not in inout:
       inout[date] = Fraction(0)
     inout[date] -= income
+    if not mistake:
+      if date not in inoutnonmistaken:
+        inoutnonmistaken[date] = Fraction(0)
+      inoutnonmistaken[date] -= income
     continue
+  if found and (ticker in mistakes):
+    mistake = True
+    #found = False
   if not found:
     continue
   if date not in inout:
     inout[date] = Fraction(0)
   inout[date] += value
+  if not mistake:
+    if date not in inoutnonmistaken:
+      inoutnonmistaken[date] = Fraction(0)
+    inoutnonmistaken[date] += value
   if value < 0:
     if ticker not in moneyin_by_id:
       moneyin_by_id[ticker] = Fraction(0)
     moneyin_by_id[ticker] -= value
+    if not mistake:
+      if ticker not in moneyin_by_id_nonmistaken:
+        moneyin_by_id_nonmistaken[ticker] = Fraction(0)
+      moneyin_by_id_nonmistaken[ticker] -= value
   else:
     if ticker not in moneyout_by_id:
       moneyout_by_id[ticker] = Fraction(0)
     moneyout_by_id[ticker] += value
+    if not mistake:
+      if ticker not in moneyout_by_id_nonmistaken:
+        moneyout_by_id_nonmistaken[ticker] = Fraction(0)
+      moneyout_by_id_nonmistaken[ticker] += value
   #print "TX: " + str(date) + " " + ticker + " val " + str(value) + " " + currency + " @ " + str(quantity)
 #print "-----"
 #for k,v in sorted(inout.items(), key=lambda x:x[0]):
@@ -158,22 +194,30 @@ totals = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
   if amnt == 0:
     continue
+  assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
   totals += totval
 
 inoutidx = dict(inout)
+inoutidx_nonmistaken = dict(inoutnonmistaken)
 
 # --------------
+
+#fees = 0.995 ** (1/365.25)
+fees = 1.0
 
 data = []
 with open('vboxshared/index.csv') as csvfile:
   reader = csv.reader(csvfile, delimiter=';')
-  for row in list(reader)[1:]:
+  listreader = list(reader)
+  date0 = datetime.datetime.strptime(listreader[1][0].replace(' 0:00',''), "%d.%m.%Y").date()
+  for row in listreader[1:]:
     timestr = row[0].replace(' 0:00','')
     date = datetime.datetime.strptime(timestr, "%d.%m.%Y").date()
+    diff = (date-date0).days
     row[2] = row[2].replace(',', '.')
     idxval = Decimal(row[2])
-    data += [(date, idxval)]
+    data += [(date, idxval*Decimal(fees**diff))]
 
 def next_idxquote(date):
   try:
@@ -187,16 +231,29 @@ for k,v in sorted(inoutidx.items(), key=lambda x:x[0]):
   totalidx -= v/Fraction(quote)
 totalidx *= Fraction(next_idxquote(datetime.date.today()))
 
+totalidx_nonmistaken = Fraction(0)
+for k,v in sorted(inoutidx_nonmistaken.items(), key=lambda x:x[0]):
+  quote = next_idxquote(k)
+  totalidx_nonmistaken -= v/Fraction(quote)
+totalidx_nonmistaken *= Fraction(next_idxquote(datetime.date.today()))
+
 date = datetime.date.today()
 if date not in inoutidx:
   inoutidx[date] = Fraction(0)
 inoutidx[date] += totalidx
 
+date = datetime.date.today()
+if date not in inoutidx_nonmistaken:
+  inoutidx_nonmistaken[date] = Fraction(0)
+inoutidx_nonmistaken[date] += totalidx_nonmistaken
+
 # Index in and out
 for k,v in sorted(inoutidx.items(), key=lambda x:x[0]):
   print str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator))
 
+print
 print "=================="
+print
 
 # ---------------
 
@@ -204,6 +261,11 @@ date = datetime.date.today()
 if date not in inout:
   inout[date] = Fraction(0)
 inout[date] += totals
+
+date = datetime.date.today()
+if date not in inoutnonmistaken:
+  inoutnonmistaken[date] = Fraction(0)
+inoutnonmistaken[date] += totals
 
 def npv(dataset,irr):
   total = 0.0
@@ -249,9 +311,15 @@ def binsearch(dataset):
       toprange = mid
   return mid
 
+print
 print "=================="
-
+print
 print "My portfolio", binsearch(inout)
 print "My portfolio", npv(inout, 0.0)
 print "Index", binsearch(inoutidx)
 print "Index", npv(inoutidx, 0.0)
+print
+print "My portfolio, non-mistaken", binsearch(inoutnonmistaken)
+print "My portfolio, non-mistaken", npv(inoutnonmistaken, 0.0)
+print "Index, non-mistaken", binsearch(inoutidx_nonmistaken)
+print "Index, non-mistaken", npv(inoutidx_nonmistaken, 0.0)
