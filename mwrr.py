@@ -210,10 +210,16 @@ data = []
 with open('vboxshared/index.csv') as csvfile:
   reader = csv.reader(csvfile, delimiter=';')
   listreader = list(reader)
-  date0 = datetime.datetime.strptime(listreader[1][0].replace(' 0:00',''), "%d.%m.%Y").date()
+  try:
+    date0 = datetime.datetime.strptime(listreader[1][0].replace(' 0:00',''), "%d.%m.%Y").date()
+  except ValueError:
+    date0 = datetime.datetime.strptime(listreader[1][0].replace(' 0:00',''), "%d/%m/%Y").date()
   for row in listreader[1:]:
     timestr = row[0].replace(' 0:00','')
-    date = datetime.datetime.strptime(timestr, "%d.%m.%Y").date()
+    try:
+      date = datetime.datetime.strptime(timestr, "%d.%m.%Y").date()
+    except ValueError:
+      date = datetime.datetime.strptime(timestr, "%d/%m/%Y").date()
     diff = (date-date0).days
     row[2] = row[2].replace(',', '.')
     idxval = Decimal(row[2])
