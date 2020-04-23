@@ -7,6 +7,8 @@ from fractions import Fraction
 
 with open("mwrr/categories.txt", "r") as f:
   cats = dict(x[:-1].rsplit(" ", 1) for x in f.readlines() if x != "\n")
+with open("mwrr/markets.txt", "r") as f:
+  mkts = dict(x[:-1].rsplit(" ", 1) for x in f.readlines() if x != "\n")
 
 filename = "gnucash/gnucash.gnucash"
 
@@ -350,3 +352,20 @@ print
 for cat, totval in cat_totals.items():
   totval /= totals
   print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+
+mkt_totals = {}
+totals = Fraction(0)
+for ticker,amnt in quantities_by_ticker.items():
+  if amnt == 0:
+    continue
+  assert ticker not in mistakes
+  totval = mostrecenteur[ticker]*amnt
+  if mkts[ticker] not in mkt_totals:
+    mkt_totals[mkts[ticker]] = Fraction(0)
+  mkt_totals[mkts[ticker]] += totval
+  totals += totval
+
+print
+for mkt, totval in mkt_totals.items():
+  totval /= totals
+  print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
