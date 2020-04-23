@@ -5,6 +5,9 @@ import datetime
 from decimal import Decimal
 from fractions import Fraction
 
+with open("mwrr/categories.txt", "r") as f:
+  cats = dict(x[:-1].rsplit(" ", 1) for x in f.readlines() if x != "\n")
+
 filename = "gnucash/gnucash.gnucash"
 
 checkingaccounts = {
@@ -22,13 +25,14 @@ with open("mwrr/mistakes.txt") as f:
   mistakes = set(x.strip() for x in f.readlines())
 #mistakes = set([])
 
-currencylist = set(["USD","SEK","NOK","DKK","EUR","GBP"])
+currencylist = set(["USD","SEK","NOK","DKK","EUR","GBP","CAD"])
 currencies = {"EUR": (Fraction(1), datetime.date.today())}
 currenciesall = {"EUR": [(Fraction(1), datetime.date.today())],
                  "USD": [],
                  "NOK": [],
                  "SEK": [],
                  "GBP": [],
+                 "CAD": [],
                  "DKK": []}
 incomeaccounts = {}
 mostrecent = {}
@@ -207,7 +211,7 @@ inoutidx_nonmistaken = dict(inoutnonmistaken)
 fees = 1.0
 
 data = []
-with open('vboxshared/index.csv') as csvfile:
+with open('vboxshared/index2.csv') as csvfile:
   reader = csv.reader(csvfile, delimiter=';')
   listreader = list(reader)
   try:
@@ -329,3 +333,20 @@ print "My portfolio, non-mistaken", binsearch(inoutnonmistaken)
 print "My portfolio, non-mistaken", npv(inoutnonmistaken, 0.0)
 print "Index, non-mistaken", binsearch(inoutidx_nonmistaken)
 print "Index, non-mistaken", npv(inoutidx_nonmistaken, 0.0)
+
+cat_totals = {}
+totals = Fraction(0)
+for ticker,amnt in quantities_by_ticker.items():
+  if amnt == 0:
+    continue
+  assert ticker not in mistakes
+  totval = mostrecenteur[ticker]*amnt
+  if cats[ticker] not in cat_totals:
+    cat_totals[cats[ticker]] = Fraction(0)
+  cat_totals[cats[ticker]] += totval
+  totals += totval
+
+print
+for cat, totval in cat_totals.items():
+  totval /= totals
+  print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
