@@ -67,6 +67,7 @@ for pricexml in pricedb.iter('price'):
   timestr = timexml.find('{http://www.gnucash.org/XML/ts}date').text
   timestr = timestr.replace(' +0300','')
   timestr = timestr.replace(' +0200','')
+  timestr = timestr.replace(' +0000','')
   date = datetime.datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S").date()
   value = pricexml.find('{http://www.gnucash.org/XML/price}value').text
   f = Fraction(value)
@@ -121,6 +122,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   timestr = datepostxml.find('{http://www.gnucash.org/XML/ts}date').text
   timestr = timestr.replace(' +0300','')
   timestr = timestr.replace(' +0200','')
+  timestr = timestr.replace(' +0000','')
   date = datetime.datetime.strptime(timestr, "%Y-%m-%d %H:%M:%S").date()
   found = False
   value = Fraction(0)
