@@ -338,6 +338,18 @@ print "My portfolio, non-mistaken", npv(inoutnonmistaken, 0.0)
 print "Index, non-mistaken", binsearch(inoutidx_nonmistaken)
 print "Index, non-mistaken", npv(inoutidx_nonmistaken, 0.0)
 
+firstdate=sorted(inout.keys())[0]
+lastdate=sorted(inout.keys())[-1]
+def nearest_indexquote(date):
+  return sorted([(idxval,abs((idxdate-date).days)) for idxdate,idxval in data], key=lambda x:x[1])[0][0]
+firstquote=nearest_indexquote(firstdate)
+lastquote=nearest_indexquote(lastdate)
+print
+print "First date", str(firstdate), firstquote
+print "Last date", str(lastdate), lastquote
+print "TWRR", float(lastquote/firstquote)**(365.0/(lastdate-firstdate).days)-1
+
+
 cat_totals = {}
 totals = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
