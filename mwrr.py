@@ -368,7 +368,9 @@ for cat, totval in cat_totals.items():
   print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
 
 mkt_totals = {}
+mkt_totals_nofortum = {}
 totals = Fraction(0)
+totals_nofortum = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
   if amnt == 0:
     continue
@@ -376,10 +378,20 @@ for ticker,amnt in quantities_by_ticker.items():
   totval = mostrecenteur[ticker]*amnt
   if mkts[ticker] not in mkt_totals:
     mkt_totals[mkts[ticker]] = Fraction(0)
+    mkt_totals_nofortum[mkts[ticker]] = Fraction(0)
   mkt_totals[mkts[ticker]] += totval
   totals += totval
+  if ticker != "FORTUM":
+    mkt_totals_nofortum[mkts[ticker]] += totval
+    totals_nofortum += totval
 
 print
 for mkt, totval in mkt_totals.items():
   totval /= totals
+  print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+
+print
+print "W/O Fortum:"
+for mkt, totval in mkt_totals_nofortum.items():
+  totval /= totals_nofortum
   print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
