@@ -27,7 +27,7 @@ with open("mwrr/mistakes.txt") as f:
   mistakes = set(x.strip() for x in f.readlines())
 #mistakes = set([])
 
-currencylist = set(["USD","SEK","NOK","DKK","EUR","GBP","CAD"])
+currencylist = set(["USD","SEK","NOK","DKK","EUR","GBP","CAD","CHF"])
 currencies = {"EUR": (Fraction(1), datetime.date.today())}
 currenciesall = {"EUR": [(Fraction(1), datetime.date.today())],
                  "USD": [],
@@ -35,7 +35,8 @@ currenciesall = {"EUR": [(Fraction(1), datetime.date.today())],
                  "SEK": [],
                  "GBP": [],
                  "CAD": [],
-                 "DKK": []}
+                 "DKK": [],
+                 "CHF": []}
 incomeaccounts = {}
 mostrecent = {}
 mostrecenteur = {}
