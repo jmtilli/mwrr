@@ -143,7 +143,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       #print "QUOTE: " + str(nearest_quote(currency,date))
       #value += Fraction(valuetext)*nearest_quote(currency,date)
       value += Fraction(quantitytext)*nearest_quote(currency,date)
-    if acctext in ticker_by_id and actiontext in set(["Buy","Sell"]):
+    if acctext in ticker_by_id and actiontext in set(["Buy","Sell","Split"]):
       found = True
       quantity += Fraction(quantitytext)
       ticker = ticker_by_id[acctext]
