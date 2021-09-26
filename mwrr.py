@@ -2,6 +2,8 @@ import xml.etree.ElementTree as ET
 import csv
 import gzip
 import datetime
+import getopt
+import sys
 from decimal import Decimal
 from fractions import Fraction
 
@@ -206,6 +208,29 @@ for ticker,amnt in quantities_by_ticker.items():
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
   totals += totval
+
+verbose = False
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "ht:v", ["help", "total=", "verbose"])
+except getopt.GetoptError as err:
+    print(err)
+    print("Usage: python mwrr.py [-h] [-v] [-t total]")
+    sys.exit(2)
+for o, a in opts:
+    if o in ("-t", "--total"):
+        totals = Fraction(a)
+    elif o in ("-v", "--verbose"):
+        verbose = True
+    elif o in ("-h", "--help"):
+        print("Usage: python mwrr.py [-h] [-t total]")
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+
+if verbose:
+    for ticker,amnt in sorted(quantities_by_ticker.items()):
+        totval = mostrecenteur[ticker]*amnt
+        print(ticker+": "+str(float(totval)))
 
 inoutidx = dict(inout)
 inoutidx_nonmistaken = dict(inoutnonmistaken)
