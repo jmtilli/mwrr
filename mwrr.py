@@ -156,6 +156,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       if not found:
         income_ticker = ticker_by_id[acctext]
   if income != Fraction(0):
+    if not income_ticker:
+      print ET.tostring(trnxml, encoding='utf8', method='xml')
     assert income_ticker
     if income_ticker in mistakes:
       mistake = True
@@ -171,6 +173,9 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   if found and (ticker in mistakes):
     mistake = True
     #found = False
+  #if ticker == "TSLA":
+  #  print "Omit TSLA"
+  #  continue
   if not found:
     continue
   if date not in inout:
@@ -377,20 +382,32 @@ print "TWRR", float(lastquote/firstquote)**(365.0/(lastdate-firstdate).days)-1
 
 
 cat_totals = {}
+cat_totals_nofortum = {}
 totals = Fraction(0)
+totals_nofortum = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
-  if amnt == 0:
+  if amnt == 0 or ticker=='ILMASTO':
     continue
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
   if cats[ticker] not in cat_totals:
     cat_totals[cats[ticker]] = Fraction(0)
+    cat_totals_nofortum[cats[ticker]] = Fraction(0)
   cat_totals[cats[ticker]] += totval
   totals += totval
+  if ticker != "FORTUM":
+    cat_totals_nofortum[cats[ticker]] += totval
+    totals_nofortum += totval
 
 print
 for cat, totval in cat_totals.items():
   totval /= totals
+  print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+
+print
+print "W/O Fortum:"
+for cat, totval in cat_totals_nofortum.items():
+  totval /= totals_nofortum
   print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
 
 mkt_totals = {}
@@ -398,7 +415,7 @@ mkt_totals_nofortum = {}
 totals = Fraction(0)
 totals_nofortum = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
-  if amnt == 0:
+  if amnt == 0 or ticker=='ILMASTO':
     continue
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
