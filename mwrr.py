@@ -7,6 +7,27 @@ import sys
 from decimal import Decimal
 from fractions import Fraction
 
+verbose = False
+this_ticker_only = None
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "ht:T:v", ["help", "total=", "ticker=", "verbose"])
+except getopt.GetoptError as err:
+    print(err)
+    print("Usage: python mwrr.py [-h] [-v] [-t total] [-T ticker]")
+    sys.exit(2)
+for o, a in opts:
+    if o in ("-t", "--total"):
+        totals = Fraction(a)
+    elif o in ("-T", "--ticker"):
+        this_ticker_only = a
+    elif o in ("-v", "--verbose"):
+        verbose = True
+    elif o in ("-h", "--help"):
+        print("Usage: python mwrr.py [-h] [-t total]")
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+
 with open("mwrr/categories.txt", "r") as f:
   cats = dict(x[:-1].rsplit(" ", 1) for x in f.readlines() if x != "\n")
 with open("mwrr/markets.txt", "r") as f:
@@ -149,6 +170,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       found = True
       quantity += Fraction(quantitytext)
       ticker = ticker_by_id[acctext]
+      if this_ticker_only != None and ticker != this_ticker_only:
+        continue
       if ticker not in quantities_by_ticker:
         quantities_by_ticker[ticker] = Fraction(0)
       quantities_by_ticker[ticker] += Fraction(quantitytext)
@@ -159,6 +182,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
     if not income_ticker:
       print ET.tostring(trnxml, encoding='utf8', method='xml')
     assert income_ticker
+    if this_ticker_only != None and income_ticker != this_ticker_only:
+      continue
     if income_ticker in mistakes:
       mistake = True
       #continue
@@ -177,6 +202,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   #  print "Omit TSLA"
   #  continue
   if not found:
+    continue
+  if this_ticker_only != None and ticker != this_ticker_only:
     continue
   if date not in inout:
     inout[date] = Fraction(0)
@@ -213,24 +240,6 @@ for ticker,amnt in quantities_by_ticker.items():
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
   totals += totval
-
-verbose = False
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:v", ["help", "total=", "verbose"])
-except getopt.GetoptError as err:
-    print(err)
-    print("Usage: python mwrr.py [-h] [-v] [-t total]")
-    sys.exit(2)
-for o, a in opts:
-    if o in ("-t", "--total"):
-        totals = Fraction(a)
-    elif o in ("-v", "--verbose"):
-        verbose = True
-    elif o in ("-h", "--help"):
-        print("Usage: python mwrr.py [-h] [-t total]")
-        sys.exit()
-    else:
-        assert False, "unhandled option"
 
 if verbose:
     for ticker,amnt in sorted(quantities_by_ticker.items()):
@@ -386,7 +395,7 @@ cat_totals_nofortum = {}
 totals = Fraction(0)
 totals_nofortum = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
-  if amnt == 0 or ticker=='ILMASTO':
+  if amnt == 0 or ticker=='ILMASTO' or ticker=='RAHAMARK':
     continue
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
@@ -404,18 +413,19 @@ for cat, totval in cat_totals.items():
   totval /= totals
   print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
 
-print
-print "W/O Fortum:"
-for cat, totval in cat_totals_nofortum.items():
-  totval /= totals_nofortum
-  print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+if this_ticker_only != "FORTUM":
+  print
+  print "W/O Fortum:"
+  for cat, totval in cat_totals_nofortum.items():
+    totval /= totals_nofortum
+    print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
 
 mkt_totals = {}
 mkt_totals_nofortum = {}
 totals = Fraction(0)
 totals_nofortum = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
-  if amnt == 0 or ticker=='ILMASTO':
+  if amnt == 0 or ticker=='ILMASTO' or ticker=='RAHAMARK':
     continue
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
@@ -433,8 +443,9 @@ for mkt, totval in mkt_totals.items():
   totval /= totals
   print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
 
-print
-print "W/O Fortum:"
-for mkt, totval in mkt_totals_nofortum.items():
-  totval /= totals_nofortum
-  print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+if this_ticker_only != "FORTUM":
+  print
+  print "W/O Fortum:"
+  for mkt, totval in mkt_totals_nofortum.items():
+    totval /= totals_nofortum
+    print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
