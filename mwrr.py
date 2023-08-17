@@ -7,10 +7,11 @@ import sys
 from decimal import Decimal
 from fractions import Fraction
 
+onlystocks = False
 verbose = False
 this_ticker_only = None
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "ht:T:v", ["help", "total=", "ticker=", "verbose"])
+    opts, args = getopt.getopt(sys.argv[1:], "ht:T:vo", ["help", "total=", "ticker=", "verbose", "onlystocks"])
 except getopt.GetoptError as err:
     print(err)
     print("Usage: python mwrr.py [-h] [-v] [-t total] [-T ticker]")
@@ -22,6 +23,8 @@ for o, a in opts:
         this_ticker_only = a
     elif o in ("-v", "--verbose"):
         verbose = True
+    elif o in ("-o", "--onlystocks"):
+        onlystocks = True
     elif o in ("-h", "--help"):
         print("Usage: python mwrr.py [-h] [-t total]")
         sys.exit()
@@ -170,6 +173,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       found = True
       quantity += Fraction(quantitytext)
       ticker = ticker_by_id[acctext]
+      if onlystocks and ticker == 'RAHAMARK':
+        continue
       if this_ticker_only != None and ticker != this_ticker_only:
         continue
       if ticker not in quantities_by_ticker:
@@ -182,6 +187,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
     if not income_ticker:
       print ET.tostring(trnxml, encoding='utf8', method='xml')
     assert income_ticker
+    if onlystocks and income_ticker == 'RAHAMARK':
+      continue
     if this_ticker_only != None and income_ticker != this_ticker_only:
       continue
     if income_ticker in mistakes:
@@ -202,6 +209,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   #  print "Omit TSLA"
   #  continue
   if not found:
+    continue
+  if onlystocks and ticker == 'RAHAMARK':
     continue
   if this_ticker_only != None and ticker != this_ticker_only:
     continue
