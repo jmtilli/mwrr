@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+from __future__ import division
 import xml.etree.ElementTree as ET
 import csv
 import gzip
@@ -185,7 +188,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
         income_ticker = ticker_by_id[acctext]
   if income != Fraction(0):
     if not income_ticker:
-      print ET.tostring(trnxml, encoding='utf8', method='xml')
+      print(ET.tostring(trnxml, encoding='utf8', method='xml'))
     assert income_ticker
     if onlystocks and income_ticker == 'RAHAMARK':
       continue
@@ -217,6 +220,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   if date not in inout:
     inout[date] = Fraction(0)
   inout[date] += value
+  if verbose and date > datetime.date(2023,4,1):
+    print(date, str(float(value)), ticker)
   if not mistake:
     if date not in inoutnonmistaken:
       inoutnonmistaken[date] = Fraction(0)
@@ -312,11 +317,11 @@ inoutidx_nonmistaken[date] += totalidx_nonmistaken
 
 # Index in and out
 for k,v in sorted(inoutidx.items(), key=lambda x:x[0]):
-  print str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator))
+  print(str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator)))
 
-print
-print "=================="
-print
+print()
+print("==================")
+print()
 
 # ---------------
 
@@ -346,18 +351,18 @@ for k,v in sorted(inout.items(), key=lambda x:x[0]):
     moneyin -= v
   else:
     moneyout += v
-  print str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator))
+  print(str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator)))
 
-#print "Money in " + str(Decimal(moneyin.numerator)/Decimal(moneyin.denominator))
-#print "Money out " + str(Decimal(moneyout.numerator)/Decimal(moneyout.denominator))
+#print("Money in " + str(Decimal(moneyin.numerator)/Decimal(moneyin.denominator)))
+#print("Money out " + str(Decimal(moneyout.numerator)/Decimal(moneyout.denominator)))
 
-#print "----"
+#print("----")
 #for k,v in moneyin_by_id.items():
-#  print "Money in " + k + " " + str(Decimal(v.numerator)/Decimal(v.denominator))
-#print "----"
+#  print("Money in " + k + " " + str(Decimal(v.numerator)/Decimal(v.denominator)))
+#print("----")
 #for k,v in moneyout_by_id.items():
-#  print "Money out " + k + " " + str(Decimal(v.numerator)/Decimal(v.denominator))
-#print "----"
+#  print("Money out " + k + " " + str(Decimal(v.numerator)/Decimal(v.denominator)))
+#print("----")
 
 def binsearch(dataset):
   toprange = 100.0
@@ -374,18 +379,18 @@ def binsearch(dataset):
       toprange = mid
   return mid
 
-print
-print "=================="
-print
-print "My portfolio", binsearch(inout)
-print "My portfolio", npv(inout, 0.0)
-print "Index", binsearch(inoutidx)
-print "Index", npv(inoutidx, 0.0)
-print
-print "My portfolio, non-mistaken", binsearch(inoutnonmistaken)
-print "My portfolio, non-mistaken", npv(inoutnonmistaken, 0.0)
-print "Index, non-mistaken", binsearch(inoutidx_nonmistaken)
-print "Index, non-mistaken", npv(inoutidx_nonmistaken, 0.0)
+print()
+print("==================")
+print()
+print("My portfolio", binsearch(inout))
+print("My portfolio", npv(inout, 0.0))
+print("Index", binsearch(inoutidx))
+print("Index", npv(inoutidx, 0.0))
+print()
+print("My portfolio, non-mistaken", binsearch(inoutnonmistaken))
+print("My portfolio, non-mistaken", npv(inoutnonmistaken, 0.0))
+print("Index, non-mistaken", binsearch(inoutidx_nonmistaken))
+print("Index, non-mistaken", npv(inoutidx_nonmistaken, 0.0))
 
 firstdate=sorted(inout.keys())[0]
 lastdate=sorted(inout.keys())[-1]
@@ -393,10 +398,10 @@ def nearest_indexquote(date):
   return sorted([(idxval,abs((idxdate-date).days)) for idxdate,idxval in data], key=lambda x:x[1])[0][0]
 firstquote=nearest_indexquote(firstdate)
 lastquote=nearest_indexquote(lastdate)
-print
-print "First date", str(firstdate), firstquote
-print "Last date", str(lastdate), lastquote
-print "TWRR", float(lastquote/firstquote)**(365.0/(lastdate-firstdate).days)-1
+print()
+print("First date", str(firstdate), firstquote)
+print("Last date", str(lastdate), lastquote)
+print("TWRR", float(lastquote/firstquote)**(365.0/(lastdate-firstdate).days)-1)
 
 
 cat_totals = {}
@@ -417,17 +422,17 @@ for ticker,amnt in quantities_by_ticker.items():
     cat_totals_nofortum[cats[ticker]] += totval
     totals_nofortum += totval
 
-print
+print()
 for cat, totval in cat_totals.items():
   totval /= totals
-  print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+  print(cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator)))
 
 if this_ticker_only != "FORTUM":
-  print
-  print "W/O Fortum:"
+  print()
+  print("W/O Fortum:")
   for cat, totval in cat_totals_nofortum.items():
     totval /= totals_nofortum
-    print cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+    print(cat, str(Decimal(100*totval.numerator)/Decimal(totval.denominator)))
 
 mkt_totals = {}
 mkt_totals_nofortum = {}
@@ -447,14 +452,14 @@ for ticker,amnt in quantities_by_ticker.items():
     mkt_totals_nofortum[mkts[ticker]] += totval
     totals_nofortum += totval
 
-print
+print()
 for mkt, totval in mkt_totals.items():
   totval /= totals
-  print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+  print(mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator)))
 
 if this_ticker_only != "FORTUM":
-  print
-  print "W/O Fortum:"
+  print()
+  print("W/O Fortum:")
   for mkt, totval in mkt_totals_nofortum.items():
     totval /= totals_nofortum
-    print mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator))
+    print(mkt, str(Decimal(100*totval.numerator)/Decimal(totval.denominator)))

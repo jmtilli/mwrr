@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+from __future__ import division
 import xml.etree.ElementTree as ET
 import csv
 import gzip
@@ -82,7 +85,7 @@ for k,v in mostrecent.items():
   f,currency,date = v
   mostrecenteur[k] = f*currencies[currency][0]
 for k,v in mostrecenteur.items():
-  #print k + " " + str(Decimal(v.numerator) / Decimal(v.denominator))
+  #print(k + " " + str(Decimal(v.numerator) / Decimal(v.denominator)))
   pass
 
 moneyin_by_id = {}
@@ -104,7 +107,7 @@ for accxml in book.iter('{http://www.gnucash.org/XML/gnc}account'):
   ticker = accxml.find('{http://www.gnucash.org/XML/act}commodity').find('{http://www.gnucash.org/XML/cmdty}id').text
   ticker_by_id[accid] = ticker
   id_by_ticker[ticker] = accid
-  #print ticker + ": " + accid
+  #print(ticker + ": " + accid)
 for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   ticker = None
   mistake = False
@@ -130,7 +133,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       continue
     if acctext in checkingaccounts:
       currency = checkingaccounts[acctext]
-      #print "QUOTE: " + str(nearest_quote(currency,date))
+      #print("QUOTE: " + str(nearest_quote(currency,date)))
       #value += Fraction(valuetext)*nearest_quote(currency,date)
       value += Fraction(quantitytext)*nearest_quote(currency,date)
     if acctext in ticker_by_id and actiontext in set(["Buy","Sell","Split"]):
