@@ -7,6 +7,10 @@ import gzip
 import datetime
 import getopt
 import sys
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from decimal import Decimal
 from fractions import Fraction
 
@@ -270,7 +274,8 @@ fees = 1.0
 
 data = []
 with open('vboxshared/index2.csv') as csvfile:
-  reader = csv.reader(csvfile, delimiter=';')
+  csvfile2 = StringIO(csvfile.read().replace(', ',';'))
+  reader = csv.reader(csvfile2, delimiter=';')
   listreader = list(reader)
   try:
     date0 = datetime.datetime.strptime(listreader[1][0].replace(' 0:00',''), "%d.%m.%Y").date()
