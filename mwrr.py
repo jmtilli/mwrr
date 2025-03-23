@@ -282,6 +282,8 @@ with open('vboxshared/index2.csv') as csvfile:
   except ValueError:
     date0 = datetime.datetime.strptime(listreader[1][0].replace(' 0:00',''), "%d/%m/%Y").date()
   for row in listreader[1:]:
+    if row[0] == '' and row[1] == '' and row[2] == '':
+      continue
     timestr = row[0].replace(' 0:00','')
     try:
       date = datetime.datetime.strptime(timestr, "%d.%m.%Y").date()
