@@ -14,6 +14,7 @@ except ImportError:
 from decimal import Decimal
 from fractions import Fraction
 
+totals = Fraction(0)
 onlystocks = False
 verbose = False
 this_ticker_only = None
@@ -251,13 +252,14 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
 #for k,v in sorted(inout.items(), key=lambda x:x[0]):
 #  print str(k) + ": " + str(Decimal(v.numerator)/Decimal(v.denominator))
 #print "====="
-totals = Fraction(0)
-for ticker,amnt in quantities_by_ticker.items():
-  if amnt == 0:
-    continue
-  assert ticker not in mistakes
-  totval = mostrecenteur[ticker]*amnt
-  totals += totval
+
+if not totals:
+  for ticker,amnt in quantities_by_ticker.items():
+    if amnt == 0:
+      continue
+    assert ticker not in mistakes
+    totval = mostrecenteur[ticker]*amnt
+    totals += totval
 
 if verbose:
     for ticker,amnt in sorted(quantities_by_ticker.items()):
