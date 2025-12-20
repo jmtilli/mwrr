@@ -181,7 +181,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       found = True
       quantity += Fraction(quantitytext)
       ticker = ticker_by_id[acctext]
-      if onlystocks and ticker == 'RAHAMARK':
+      if onlystocks and (ticker == 'RAHAMARK' or ticker == 'LYHKORK'):
         continue
       if this_ticker_only != None and ticker != this_ticker_only:
         continue
@@ -195,7 +195,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
     if not income_ticker:
       print(ET.tostring(trnxml, encoding='utf8', method='xml'))
     assert income_ticker
-    if onlystocks and income_ticker == 'RAHAMARK':
+    if onlystocks and (income_ticker == 'RAHAMARK' or ticker == 'LYHKORK'):
       continue
     if this_ticker_only != None and income_ticker != this_ticker_only:
       continue
@@ -218,7 +218,7 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
   #  continue
   if not found:
     continue
-  if onlystocks and ticker == 'RAHAMARK':
+  if onlystocks and (ticker == 'RAHAMARK' or ticker == 'LYHKORK'):
     continue
   if this_ticker_only != None and ticker != this_ticker_only:
     continue
@@ -418,7 +418,7 @@ cat_totals_nofortum = {}
 totals = Fraction(0)
 totals_nofortum = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
-  if amnt == 0 or ticker=='ILMASTO' or ticker=='RAHAMARK':
+  if amnt == 0 or (ticker=='ILMASTO' or ticker=='RAHAMARK' or ticker == 'LYHKORK'):
     continue
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
@@ -448,7 +448,7 @@ mkt_totals_nofortum = {}
 totals = Fraction(0)
 totals_nofortum = Fraction(0)
 for ticker,amnt in quantities_by_ticker.items():
-  if amnt == 0 or ticker=='ILMASTO' or ticker=='RAHAMARK':
+  if amnt == 0 or (ticker=='ILMASTO' or ticker=='RAHAMARK' or ticker == 'LYHKORK'):
     continue
   assert ticker not in mistakes
   totval = mostrecenteur[ticker]*amnt
