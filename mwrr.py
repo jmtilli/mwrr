@@ -177,7 +177,10 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       #print "QUOTE: " + str(nearest_quote(currency,date))
       #value += Fraction(valuetext)*nearest_quote(currency,date)
       value += Fraction(quantitytext)*nearest_quote(currency,date)
-    if acctext in ticker_by_id and actiontext in set(["Buy","Sell","Split"]):
+    #if acctext in ticker_by_id and actiontext in set(["Buy","Sell","Split"]):
+    if acctext in ticker_by_id and Fraction(quantitytext) != Fraction(0):
+      if actiontext not in set(["Buy","Sell","Split"]):
+        print("No Buy/Sell/Split for ticker " + ticker_by_id[acctext])
       found = True
       quantity += Fraction(quantitytext)
       ticker = ticker_by_id[acctext]
@@ -188,7 +191,8 @@ for trnxml in book.iter('{http://www.gnucash.org/XML/gnc}transaction'):
       if ticker not in quantities_by_ticker:
         quantities_by_ticker[ticker] = Fraction(0)
       quantities_by_ticker[ticker] += Fraction(quantitytext)
-    elif acctext in ticker_by_id and actiontext not in set(["Buy","Sell"]):
+    #elif acctext in ticker_by_id and actiontext not in set(["Buy","Sell"]):
+    elif acctext in ticker_by_id and Fraction(quantitytext) == Fraction(0):
       if not found:
         income_ticker = ticker_by_id[acctext]
   if income != Fraction(0):
